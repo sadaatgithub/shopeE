@@ -64,7 +64,9 @@ const styles = StyleSheet.create({
     container:{
         backgroundColor:colors.white,
         paddingHorizontal:20,
-        paddingBottom:30
+        paddingBottom:30,
+        flex:1
+
 
     },
     cardContainer:{
@@ -72,7 +74,7 @@ const styles = StyleSheet.create({
         flexDirection:"row",
         flexWrap:"wrap",
         marginTop:15,
-        columnGap:30,
+        columnGap:10,
         rowGap:10,
     
       }
