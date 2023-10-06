@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "920822928477",
+    "project_id": "fir-auth-demo-e4828",
+    "storage_bucket": "fir-auth-demo-e4828.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:920822928477:android:75d88ea0391ec9625469b4",
+        "android_client_info": {
+          "package_name": "com.sada_at_expo.shopEe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "920822928477-b34jr2io2h4ari7dc45q1v992obf3vpt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sada_at_expo.shopEe",
+            "certificate_hash": "20fcff0a7eec5ed86a9b561ba7b549da1ea397d2"
+          }
+        },
+        {
+          "client_id": "920822928477-rglkhd59ose76m1rr6qmug1ihut0t499.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sada_at_expo.shopEe",
+            "certificate_hash": "728a412e34ca9d3dbfbfec9d108f97d64a3d53c2"
+          }
+        },
+        {
+          "client_id": "920822928477-k3f5ad71a5ln5rmebdsa18u7nmjemb6f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtfiBvucW6WVixTqqMhCaEB82jP7PAZZo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "920822928477-k3f5ad71a5ln5rmebdsa18u7nmjemb6f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

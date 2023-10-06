@@ -13,7 +13,6 @@ const Routes = () => {
   // const { isAuthenticated } = useSelector((state) => state.auth);
   // const dispatch = useDispatch()
 const { user } = useAuthentication()
-console.log(user)
   // const retriveToken = async () =>{
   //   const token = await authStorage.getToken()
   //   if(token) dispatch(setAuth(token))
