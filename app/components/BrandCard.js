@@ -3,7 +3,7 @@ import React from 'react'
 import AppText from './heading/AppText'
 import colors from '../config/colors'
 
-const BrandCard = ({title,count,imageUrl,onPress,category}) => {
+const BrandCard = ({title,imageUrl,onPress,category}) => {
   return (
     <TouchableWithoutFeedback onPress={onPress}>
      <View style={[styles.brandCard,{backgroundColor:category=== title? colors.primary:colors.light}]}>
@@ -11,7 +11,6 @@ const BrandCard = ({title,count,imageUrl,onPress,category}) => {
         <Image style={styles.image} source={imageUrl}/>
         </View> */}
         <AppText style={[styles.title,{color:category=== title? colors.white:colors.medium}]}>{title}</AppText>
-        <Text>{count}</Text>
      </View>
     </TouchableWithoutFeedback>
   )
@@ -25,11 +24,9 @@ const styles = StyleSheet.create({
         backgroundColor:colors.light,
         marginRight:10,
         alignItems:"center",
-        padding:16,
+        padding:7,
         borderRadius:10,
-        gap:10,
-        marginVertical:6,
-        flex:1
+        gap:10
 
 
     },

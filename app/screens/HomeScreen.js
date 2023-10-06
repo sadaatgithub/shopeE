@@ -1,85 +1,64 @@
 import {
+  Dimensions,
+  FlatList,
+  Pressable,
   ScrollView,
   StyleSheet,
+  Text,
+  TextInput,
   View,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState } from "react";
+import Screen from "../components/Screen";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import colors from "../config/colors";
+import AppText from "../components/heading/AppText";
+import BrandCard from "../components/BrandCard";
+import CardTitle from "../components/heading/CardTitle";
+import ProductCard from "../components/ProductCard";
+import { useGetProductsQuery } from "../redux/feature/productApiSlice";
+import LoadingModal from "../components/modal/LoadingModal";
 import { useAuthentication } from "../utils/hooks/useAuthentication";
-import Categories from "../components/Categories";
-import BannerSlider from "../components/BannerSlider";
-import AdBanner from "../components/AdBanner";
-
-
-
-const sliderProp = {
-  section_heading:"",
-  slidePerview:1/1.2,
-  speed:3000,
-  images : [
-    {
-      id: 1,
-      image: require("../assets/banner_1.jpg"),
-      url:'',
-      url_type:1 ,
-      // = App page, 2 = External URL 
-      redirect_url:'Wishlist' 
-      // ( if redirect URL not blank then add hyperlink )
-    },
-    {
-      id: 2,
-      image: require("../assets/banner_2.jpg"),
-    },
-    {
-      id: 3,
-      image: require("../assets/banner_4.jpg"),
-    },
-  ],
-}
 
 const HomeScreen = ({ navigation }) => {
-  // const { data, isLoading } = useGetProductsQuery();
+  const { data, isLoading } = useGetProductsQuery();
   const { user } = useAuthentication()
+  const categories = [
+    "All",
+    ...new Set(
+      data?.map(
+        (item) => item.category.charAt(0).toUpperCase() + item.category.slice(1)
+      )
+    ),
+  ];
+  const [filterValue, setFilterValue] = useState("All");
 
-// console.log(data)
-  // const categories = [
-  //   "All",
-  //   ...new Set(
-  //     data?.map(
-  //       (item) => item.category.charAt(0).toUpperCase() + item.category.slice(1)
-  //     )
-  //   ),
-  // ];
-  // const [filterValue, setFilterValue] = useState("All");
-
-  // const filteredProducts = data?.filter((product) => {
-  //   if (filterValue === "All") {
-  //     return true;
-  //   } else {
-  //     return product.category === filterValue.toLocaleLowerCase();
-  //   }
-  // });
+  const filteredProducts = data?.filter((product) => {
+    if (filterValue === "All") {
+      return true;
+    } else {
+      return product.category === filterValue.toLocaleLowerCase();
+    }
+  });
 
   return (
     <View style={styles.screen}>
       <ScrollView showsVerticalScrollIndicator={false}>
-      <View>
-        <BannerSlider {...sliderProp}/>
-      </View>
-        {/* <LoadingModal isLoading={isLoading} /> */}
-        {/* <View style={{ paddingHorizontal: 20 }}>
-          <AppText style={{ fontSize: 28, fontWeight: 600 }}>Hello {user?.displayName}</AppText>
+        <LoadingModal isLoading={isLoading} />
+        <View style={{ paddingHorizontal: 20 }}>
+          <AppText style={{ fontSize: 28, fontWeight: 600 }}>Hello {user?.email}</AppText>
           <AppText style={styles.subTitle}>Welcome to ShopeE</AppText>
-        </View> */}
-      
+        </View>
 
-        {/* <View style={styles.search}>
+        <View style={styles.search}>
           <View style={styles.searchInner}>
             <MaterialCommunityIcons
               name="search-web"
               size={26}
               color={colors.textGray}
             />
+            <TextInput placeholder="Search..." style={styles.input} />
           </View>
           <MaterialCommunityIcons
             name="microphone-outline"
@@ -91,53 +70,55 @@ const HomeScreen = ({ navigation }) => {
               borderRadius: 10,
             }}
           />
-        </View> */}
+        </View>
         <View style={styles.brandAll}>
-          {/* <CardTitle
+          <CardTitle
             heading="Choose Category"
             subheading="View All"
             style={{ paddingRight: 20 }}
-          /> */}
+          />
 
-          <View style={{ marginTop: 2, gap: 20,width:"100%"}}>
-
-            <Categories/>
-            
+          <View style={{ marginTop: 20, gap: 20 }}>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={categories}
+              keyExtractor={(brand, idx) => idx}
+              // style={{gap:20}}
+              renderItem={({ item }) => (
+                <BrandCard
+                  title={item}
+                  onPress={() => setFilterValue(item)}
+                  category={filterValue}
+                />
+              )}
+            />
           </View>
-          
 
           {/* new arrival------------------- */}
-          {/* <View style={styles.container}>
+          <View style={styles.container}>
             <CardTitle
               heading="New Arrival"
               subheading="View All"
               style={{ paddingRight: 20 }}
             />
-            
-          </View>
-          <View style={styles.cardContainer}>
-              {data?.map((product) => (
+            <View style={styles.cardContainer}>
+              {filteredProducts?.map((product) => (
                 <ProductCard
                   key={product.id}
-                  title={product.name}
+                  title={product.title}
                   price={product.price}
-                  imageUrl={product.images[0].src}
+                  imageUrl={product.image}
                   onPress={() =>
                     navigation.navigate("ProductDetail", product.id)
                   }
                 />
               ))}
-    
-
-            </View> */}
-          
-        </View>
-        <View style={{marginTop:20}}>
-          <AdBanner/>
+            </View>
           </View>
+        </View>
       </ScrollView>
     </View>
-    
   );
 };
 
@@ -146,8 +127,6 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   screen: {
     backgroundColor: colors.white,
-    flex:1,
-
   },
 
   title: {},
@@ -198,11 +177,10 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     width: "100%",
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginTop: 15,
     gap: 20,
     paddingVertical: 10,
-    // flex:1
-    flexDirection:"row",
-    flexWrap:"wrap"
   },
 });

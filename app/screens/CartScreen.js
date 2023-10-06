@@ -18,6 +18,7 @@ import { useSelector, useDispatch } from "react-redux";
 
 const CartScreen = ({navigation}) => {
   const cart = useSelector((state) => state.cart.cart);
+  console.log(cart.length);
   const getTotal = () => {
     let totalQuantity = 0;
     let subTotal = 0;

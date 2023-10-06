@@ -35,6 +35,7 @@ const LoginScreen = () => {
   const [isLoading,setIsLoading] = useState(false)
   const [isPasswordtype,setPasswordTYpe] = useState(true)
   console.log(isPasswordtype)
+  const pwdIcon = isPasswordtype? "eye":"eye-off"
 
   const {
     control,
@@ -45,6 +46,7 @@ const LoginScreen = () => {
   });
 
   const onSubmit = async (data) => {
+    console.log(data)
     setIsLoading(true)
 
     try {
