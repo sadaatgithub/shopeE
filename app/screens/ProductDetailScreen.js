@@ -5,37 +5,23 @@ import {
   StyleSheet,
   Text,
   View,
-  Modal,
 } from "react-native";
 import React, { useState } from "react";
 import colors from "../config/colors";
 import AppText from "../components/heading/AppText";
-import CardTitle from "../components/heading/CardTitle";
 import AppButton from "../components/button/AppButton";
-import Review from "../components/reviews/Review";
 import {
   useGetProductByIdQuery,
-  useGetProductsQuery,
 } from "../redux/feature/productApiSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../redux/feature/cartSlice";
-import ProductCard from "../components/ProductCard";
-import RelatedProducts from "../components/RelatedProducts";
-import { useGetVariationsQuery } from "../redux/feature/variationsApiSlice";
-import { findProductIdByAttributes } from "../utils/helpers";
+
 import LoadingModal from "../components/modal/LoadingModal";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { Picker } from "@react-native-picker/picker";
 import ChooseVariantModal from "../components/modal/ChooseVariantModal";
-import { reset, setVariantAttributes } from "../redux/feature/variantSlice";
-reset
-// const images = [
-//   { id: 1, image: require("../assets/product_1.png") },
-//   { id: 2, image: require("../assets/product_1.png") },
-//   { id: 3, image: require("../assets/product_1.png") },
-//   { id: 4, image: require("../assets/product_1.png") },
-// ];
+import { setVariantAttributes } from "../redux/feature/variantSlice";
+
 
 const ProductDetailScreen = ({ navigation, route }) => {
   const productId = route.params;
@@ -43,17 +29,20 @@ const ProductDetailScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
   const { data: product, isLoading, isError } = useGetProductByIdQuery(productId);
   const {variant} = useSelector((state) => state.variant)
+  const cart = useSelector((state) => state.cart.cart);
 
+  const alreadyInCart = (id) => {
+    const isItemInCart = cart?.find((item) => item.id === id);
+    return isItemInCart;
+  };
 
-
-console.log(productId)
-  // const { product } = useGetProductsQuery(undefined, {
+// console.log(productId)
+  // const { product } = useGetProductsByCategoryQuery(undefined, {
   //   selectFromResult: ({ data }) => ({
-  //     product: data?.find((product) => product.id === id),
+  //     product: data?.find((product) => product.id === productId),
   //   }),
   // });
   // const [product,setProduct] = useState(...data)
-
 
   if (product?.type === 'variable'){
     dispatch(setVariantAttributes(product.attributes))
@@ -80,10 +69,12 @@ console.log(productId)
       
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.imageContainer}>
+          {product?.images[0] && 
           <Image
             style={styles.image}
             source={{ uri: product?.images[0].src }}
           />
+        }
         </View>
         <View style={{ paddingHorizontal: 15 }}>
           <View style={{ marginTop: 15 }}>
@@ -263,7 +254,7 @@ console.log(productId)
       </ScrollView>
       <View style={{ flexDirection: "row" }}>
         <AppButton
-          title="Add to Cart"
+          title={`${alreadyInCart(productId)? "Added to cart":"Add to cart"}`}
           style={{ borderRadius: 0, height: 60, width: "50%" }}
           onPress={() => dispatch(addToCart(product))}
         />

@@ -4,6 +4,7 @@ import Screen from '../components/Screen'
 import ProductCard from '../components/ProductCard'
 import colors from '../config/colors'
 import AppText from '../components/heading/AppText'
+import Slider from '@react-native-community/slider'
 
 
 const products = [
@@ -52,6 +53,12 @@ const WishListScreen = ({navigation}) => {
             {products.map(product =>(
                 <ProductCard key={product.id} title={product.title} price={product.price}  onPress={()=> navigation.navigate("ProductDetail")}/>
             ))}
+            </View>
+
+<View style={{flexDirection:"column",
+width:200, height:150,borderWidth:1, transform:[{rotate:'90deg'}]}}>
+            <Slider
+            vertical={true}/>
             </View>
             </ScrollView>
     </View>

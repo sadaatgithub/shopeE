@@ -87,6 +87,8 @@ const BannerSlider = ({ section_heading, slidePerview, speed, images }) => {
 
     return () => clearInterval(interval);
   }, [activeIndex]);
+
+  
   return (
     <View>
       {section_heading && <AppText>{section_heading}</AppText>}
@@ -100,6 +102,16 @@ const BannerSlider = ({ section_heading, slidePerview, speed, images }) => {
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
         getItemLayout={getItemLayout}
+        // onMomentumScrollEnd={(e) =>{
+        //   const contentOffset = e.nativeEvent.contentOffset;
+        //   const viewSize = e.nativeEvent.layoutMeasurement;
+        //   const index = Math.floor(contentOffset.x / viewSize.width);
+        //   console.log(index)
+        //   if(index===images.length-1){
+
+        //     setActiveIndex(index);
+        //   }
+        // }}
       />
       <View style={styles.dotContainer}>{renderDotIndicators()}</View>
     </View>

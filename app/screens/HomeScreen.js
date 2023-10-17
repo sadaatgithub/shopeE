@@ -9,7 +9,7 @@ import { useAuthentication } from "../utils/hooks/useAuthentication";
 import Categories from "../components/Categories";
 import BannerSlider from "../components/BannerSlider";
 import AdBanner from "../components/AdBanner";
-
+import CustomCarousel from "../components/CustomCarousel";
 
 
 const sliderProp = {
@@ -20,7 +20,7 @@ const sliderProp = {
     {
       id: 1,
       image: require("../assets/banner_1.jpg"),
-      url:'',
+      // url:'',
       url_type:1 ,
       // = App page, 2 = External URL 
       redirect_url:'Wishlist' 
@@ -64,8 +64,13 @@ const HomeScreen = ({ navigation }) => {
     <View style={styles.screen}>
       <ScrollView showsVerticalScrollIndicator={false}>
       <View>
-        <BannerSlider {...sliderProp}/>
+        {/* <BannerSlider {...sliderProp}/> */}
+        <CustomCarousel {...sliderProp}/>
       </View>
+
+
+
+
         {/* <LoadingModal isLoading={isLoading} /> */}
         {/* <View style={{ paddingHorizontal: 20 }}>
           <AppText style={{ fontSize: 28, fontWeight: 600 }}>Hello {user?.displayName}</AppText>

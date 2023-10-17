@@ -16,7 +16,10 @@ import colors from "../config/colors";
 import AppButton from "../components/button/AppButton";
 import { useSelector, useDispatch } from "react-redux";
 
-const CartScreen = ({navigation}) => {
+// key-secrete - L1fuJb7BouPVKkBLvLCWIKUG
+// key id- rzp_test_CMUFlBe2kAf4CY
+
+const CartScreen = ({ navigation }) => {
   const cart = useSelector((state) => state.cart.cart);
   const getTotal = () => {
     let totalQuantity = 0;
@@ -36,9 +39,16 @@ const CartScreen = ({navigation}) => {
   return (
     <Screen style={styles.screen}>
       {cart.length == 0 ? (
-        <View style={{flex:1, justifyContent:'center',alignItems:"center"}}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           <AppText>Cart is empty !</AppText>
-          <AppButton title="Continue Shopping" color="primary" onPress={() => navigation.navigate("Home")} style={{width:"50%"}}/>
+          <AppButton
+            title="Continue Shopping"
+            color="primary"
+            onPress={() => navigation.navigate("Home")}
+            style={{ width: "50%" }}
+          />
         </View>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -47,9 +57,9 @@ const CartScreen = ({navigation}) => {
               {cart.map((product) => (
                 <ProductCartCard
                   key={product.id}
-                  title={product.title}
+                  title={product.name}
                   price={product.price}
-                  imageUrl={product.image}
+                  imageUrl={product?.images[0]?.src}
                   qty={product.quantity}
                   id={product.id}
                 />
@@ -58,7 +68,7 @@ const CartScreen = ({navigation}) => {
 
             {/* delivery Address----------------> */}
 
-            <View style={styles.delivery}>
+            {/* <View style={styles.delivery}>
               <View
                 style={{
                   flexDirection: "row",
@@ -102,8 +112,8 @@ const CartScreen = ({navigation}) => {
                 color="#4AC76D"
                 style={{ position: "absolute", right: 5, bottom: 5 }}
               />
-            </View>
-            <View style={styles.delivery}>
+            </View> */}
+            {/* <View style={styles.delivery}>
               <View
                 style={{
                   flexDirection: "row",
@@ -152,7 +162,7 @@ const CartScreen = ({navigation}) => {
                 color="#4AC76D"
                 style={{ position: "absolute", right: 5, bottom: 5 }}
               />
-            </View>
+            </View> */}
 
             <View style={{ paddingBottom: 100 }}>
               <AppText>Order Info</AppText>
@@ -200,7 +210,15 @@ const CartScreen = ({navigation}) => {
           </View>
         </ScrollView>
       )}
-      {cart.length > 0 && <AppButton title="Checkout" style={styles.btn} />}
+      {cart.length > 0 && (
+        <AppButton
+          title="Checkout"
+          style={styles.btn}
+          onPress={() => navigation.navigate("BillingAndShipping",{
+            product:cart,total:getTotal().subTotal + getTotal().shipping
+          })}
+        />
+      )}
     </Screen>
   );
 };

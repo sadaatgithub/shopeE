@@ -7,23 +7,32 @@ import { getAuth,signOut } from 'firebase/auth'
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import { useAuthentication } from "../utils/hooks/useAuthentication";
-
+import { persistor } from '../redux/store/store'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { PURGE } from 'redux-persist'
+import { clearCart } from '../redux/feature/cartSlice'
 const auth = getAuth();
 
-const AccountScreen = () => {
+const AccountScreen = ({navigation}) => {
   const dispatch = useDispatch()
   const {user} = useAuthentication()
+  GoogleSignin.configure()
   const logOut = async () =>{
     if(user?.providerData[0].providerId === "google.com"){
       await GoogleSignin.revokeAccess()
     }
     signOut(auth)
-
+    // await persistor.flush()
+    // PURGE()
+      // await persistor.purge()
   }
   return (
     <View style={styles.container}>
-      <AppButton title="Logout" style={{width:"50%"}} 
-          onPress={logOut}/>
+      {/* <AppButton title="Logout" style={{width:"50%"}} 
+          onPress={logOut}/> */}
+
+          <AppButton title="Video Page" style={{width:"50%"}}
+          onPress={()=> navigation.navigate('Video')}/>
     </View>
   )
 }

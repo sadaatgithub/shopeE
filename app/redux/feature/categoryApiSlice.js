@@ -1,4 +1,3 @@
-import { enableExpoCliLogging } from "expo/build/logs/Logs";
 import { apiSlice } from "../services/apiSlice";
 
 const categoryApiSlice = apiSlice.injectEndpoints({

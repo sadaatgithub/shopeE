@@ -6,6 +6,9 @@ import ProductDetailScreen from "../screens/ProductDetailScreen";
 import ReviewsScreen from "../screens/ReviewsScreen";
 import AddReviewScreen from "../screens/AddReviewScreen";
 import Header from "../components/Header";
+import AppNavigator from "./AppNavigator";
+import Video from "../components/VideoPlayer";
+import VideoPlayer from "../components/VideoPlayer";
 
 const Stack = createStackNavigator();
 
@@ -13,7 +16,7 @@ const RootNavigator = () => (
   <Stack.Navigator>
     <Stack.Screen
       name="Root"
-      component={DrawerNavigator}
+      component={AppNavigator}
       options={{ headerShown: false }}
     />
     <Stack.Screen
@@ -35,6 +38,7 @@ const RootNavigator = () => (
       component={AddReviewScreen}
       options={{ headerTitle: "Add Reviews" }}
     />
+    <Stack.Screen name="Video" component={VideoPlayer} options={{headerShown:false}}/>
   </Stack.Navigator>
 );
 
