@@ -9,12 +9,14 @@ import ProductNavigator from "./ProductNavigator";
 import WishListScreen from "../screens/WishListScreen";
 import AccountScreen from "../screens/AccountScreen";
 import Header from "../components/Header";
+import CartNavigator from "./CartNavigator";
+import VideoNavigator from "./VideoNavigator";
 
 const Tab = createBottomTabNavigator();
 
 const AppNavigator = () => {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator >
       <Tab.Screen
         name="Home"
         component={ProductNavigator}
@@ -22,12 +24,7 @@ const AppNavigator = () => {
           tabBarIcon: ({ size, color }) => (
             <MaterialCommunityIcons name="home" size={size} color={color} />
           ),
-          header: ({ navigation, route }) => (
-            <Header 
-                navigation={navigation} 
-                route={route} 
-                isHome={true} />
-          ),
+          headerShown:false
         }}
       />
       <Tab.Screen
@@ -47,7 +44,7 @@ const AppNavigator = () => {
       />
       <Tab.Screen
         name="Setting"
-        component={AccountScreen}
+        component={VideoNavigator}
         options={{
           tabBarIcon: ({ size, color }) => (
             <MaterialCommunityIcons
@@ -55,16 +52,16 @@ const AppNavigator = () => {
               size={size}
               color={color}
             />
-          ),
+          ),headerShown:false
         }}
       />
       <Tab.Screen
         name="Cart"
-        component={CartScreen}
+        component={CartNavigator}
         options={{
           tabBarIcon: ({ size, color }) => (
             <MaterialCommunityIcons name="cart" size={size} color={color} />
-          ),
+          ),headerShown:false
         }}
       />
     </Tab.Navigator>

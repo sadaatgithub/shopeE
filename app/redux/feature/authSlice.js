@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import * as SecureStore from "expo-secure-store";
 import authStorage from "../../utils/storage"
-
+import { PURGE } from "redux-persist";
 
 const initialState = {
   isAuthenticated:false,
@@ -26,6 +26,11 @@ export const authSlice = createSlice({
       state.isLoading = false;
     },
   },
+  extraReducers:(builder) =>{
+    builder.addCase(PURGE,(state) =>{
+      state.isAuthenticated = false
+    })
+  }
 });
 
 export const storeToken = (token) => async (dispatch) =>{

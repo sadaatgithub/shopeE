@@ -10,7 +10,8 @@ import {
   TextInput,
   Button,
   Modal,
-  ActivityIndicator
+  ActivityIndicator,
+  ScrollView
 } from "react-native";
 import React, { useState } from "react";
 import AppText from "../components/heading/AppText";
@@ -22,7 +23,7 @@ import { useForm } from "react-hook-form";
 
 import LoadingModal from "../components/modal/LoadingModal";
 import {getAuth,signInWithEmailAndPassword} from "firebase/auth"
-import { ScrollView } from "react-native-gesture-handler";
+// import { ScrollView } from "react-native-gesture-handler";
 
 const auth = getAuth();
 const validationSchema = Yup.object().shape({

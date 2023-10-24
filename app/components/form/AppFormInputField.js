@@ -3,14 +3,16 @@ import React from 'react'
 import AppText from '../heading/AppText'
 import colors from '../../config/colors'
 
-const AppFormInputField = ({placeholder,label,style}) => {
+const AppFormInputField = ({placeholder,label,style,...restProps}) => {
   return (
     <View style={style}>
+      {label && 
     <AppText style={styles.label}>{label}</AppText>
+  }
     <View
-      style={{ backgroundColor: colors.light, marginTop: 6,borderRadius:10 }}
+      style={{ backgroundColor: colors.light,borderRadius:10 }}
     >
-      <TextInput placeholder={placeholder} placeholderTextColor={colors.textGray}
+      <TextInput placeholder={placeholder} placeholderTextColor={colors.textGray} {...restProps} 
         style={{padding:15}} />
     </View>
     </View>
@@ -23,6 +25,7 @@ const styles = StyleSheet.create({
     label:{
         fontSize:17,
         fontWeight:600,
-        color:"#1D1E20"
+        color:"#1D1E20",
+        marginBottom:6
     }
 })

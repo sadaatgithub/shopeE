@@ -9,3 +9,190 @@ import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(ReactNativeAsyncStorage)
 });
+
+
+ {castState === 'notConnected' && isControl && !isLocked && (
+            <TouchableOpacity
+              style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0,0,0,0.5)",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              onPress={() => setIsControl(!isControl)}
+            >
+
+              {/* setting caption and volume------------- */}
+
+              <View style={{ position: "absolute", right: 10, top: 10, flexDirection:"row",gap:16 }}>
+              <CastBtn videoUri={videoUri}/>
+              
+                <Switch value={repeat} trackColor={{false:colors.dark,true:colors.white}} thumbColor={'gray'} onValueChange={()=> setRepeat(!repeat)}/>
+
+                <TouchableOpacity>
+                  <MaterialIcons
+                    name={`${
+                      isCaption ? "closed-caption" : "closed-caption-disabled"
+                    }`}
+                    color={colors.white}
+                    size={30}
+                    onPress={() => setIsCaption(!isCaption)}
+                  />
+                </TouchableOpacity>
+                
+               <MaterialIcons
+                name={`${isMuted || volume === 0 ? "volume-off" : "volume-up"}`}
+                color={"white"}
+                size={30}
+                style={{}}
+                onPress={() => setIsmuted(!isMuted)}
+              />
+              <MaterialIcons
+                name="settings"
+                color={"white"}
+                size={30}
+                style={{}}
+                onPress={() => setIsVisible(!isVisible)}
+              />
+
+              </View>
+
+
+
+              {/* brightenss slider */}
+              {castState=== 'notConnected' &&
+              <View
+                style={{
+                  position: "absolute",
+                  left: -40,
+                  transform: [{ rotate: "-90deg" }],
+                }}
+              >
+                <Slider
+                  style={{ width: 150 }}
+                  vertical
+                  minimumTrackTintColor="white"
+                  maximumTrackTintColor="white"
+                  thumbTintColor="white"
+                  minimumValue={0}
+                  maximumValue={1}
+                  // thumbImage={require('../assets/sun.png')}
+
+                  step={0.1}
+                  value={brightness}
+                  onValueChange={(x) => setBrightness(x)}
+                />
+              </View>
+              }
+             
+              {/* volume bar-------------------------> */}
+
+              {
+              volumeBar && (
+                <View
+                  style={{
+                    position: "absolute",
+                    // bottom: 100,
+                    right: -40,
+                    // width: "50%",
+                    transform: [{ rotate: "-90deg" }],
+                  }}
+                >
+                  <Slider
+                    style={{ width: 150 }}
+                    vertical
+                    maximumTrackTintColor="gray"
+                    minimumTrackTintColor="#FFF"
+                    minimumValue={0}
+                    maximumValue={1.0}
+                    thumbTintColor="white"
+                    step={0.2}
+                    value={volume}
+                    onValueChange={(volume) => setVolume(volume)}
+                  />
+                </View>
+              )}
+                
+
+              
+
+              {/* play/pause/seek control-------------------------> */}
+
+              <View style={{ flexDirection: "row", gap: 40 }}>
+                <MaterialIcons
+                  name="replay-10"
+                  color={colors.white}
+                  size={inFullscreen ? 40 : 30}
+                  onPress={() => (
+                    // setSeek(10)
+                    videoRef.current.seek(progress.currentTime - 10)
+                  )}
+                />
+               <MaterialIcons
+                  name={`${isPaused ? "play-arrow" : "pause"}`}
+                  color={colors.white}
+                  size={inFullscreen ? 40 : 30}
+                  onPress={() => setIsPaused(!isPaused)}
+                />
+                <MaterialIcons
+                  name="forward-10"
+                  color={colors.white}
+                  size={inFullscreen ? 40 : 30}
+                  onPress={() =>
+                    videoRef.current.seek(progress.currentTime + 10)
+                  }
+                />
+              </View>
+
+              {/* bottom progress bar-------------------------> */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  bottom: inFullscreen ? -130 : -85,
+                  paddingHorizontal: 20,
+                  gap: 30,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    // width: "100%",
+                    flex: 1,
+                  }}
+                >
+                  <Text style={{ color: colors.white }}>
+                    {format(progress.currentTime)}
+                  </Text>
+                  <Slider
+                    style={{ flex: 1 }}
+                    maximumTrackTintColor="gray"
+                    minimumTrackTintColor="#FFF"
+                    minimumValue={0}
+                    thumbTintColor="white"
+                    value={progress.currentTime}
+                    maximumValue={progress.seekableDuration}
+                    onValueChange={(x) => videoRef.current.seek(x)}
+                  />
+                  <Text style={{ color: colors.white }}>
+                    {format(progress.seekableDuration)}
+                  </Text>
+                </View>
+
+                <MaterialIcons
+                  name={`${inFullscreen ? "fullscreen-exit" : "fullscreen"}`}
+                  color={"white"}
+                  size={35}
+                  // style={{ position: "absolute", top: 5, left: 5 }}
+                  onPress={() => setInFullscreen(!inFullscreen)}
+                />
+              </View>
+
+              {/* <Text style={{ color: "white",alignSelf:"flex-start" }}>{videoUri.title}</Text> */}
+            </TouchableOpacity>
+          )}

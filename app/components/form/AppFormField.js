@@ -4,6 +4,7 @@ import AppTextInput from './AppTextInput'
 import colors from '../../config/colors'
 import { Controller } from 'react-hook-form'
 import {MaterialCommunityIcons} from "@expo/vector-icons"
+
 const AppFormField = ({control,name,label,icon,onPress,...restProps}) => {
   return (
 

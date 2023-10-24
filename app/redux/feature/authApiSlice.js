@@ -15,7 +15,10 @@ const authApiSlice = apiSlice.injectEndpoints({
         };
       },
     }),
+    getUser:builder.query({
+      query:(id)=>`customers/${id}`,
+    })
   }),
 });
 
-export const { useLoginMutation } = authApiSlice;
+export const { useLoginMutation,useGetUserQuery } = authApiSlice;
