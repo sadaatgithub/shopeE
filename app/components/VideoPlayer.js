@@ -62,7 +62,7 @@ const adds = [
     id: 1,
     title: "Add One",
     videoUrl:
-      "https://file-examples.com/storage/fe1207564e65327fe9c8723/2017/04/file_example_MP4_480_1_5MG.mp4",
+      "https://player.vimeo.com/progressive_redirect/playback/732018129/rendition/360p/file.mp4?loc=external&log_user=0&signature=cac17e733b782ac4f64a797bd0439a8f6eafe67c34b8db90d4990f587c80323e",
     // "https://www.youtube.com/watch?v=M853v2oFQRs",
   },
 ];
@@ -75,8 +75,7 @@ const VideoPlayer = ({ navigation, route }) => {
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [videoUri, setVideoUri] = useState(videoArray[currentVideoIndex]);
-  const [prevVideoId, setPrevVideoId] = useState("");
-  const [nextVideoId, setNextVideoId] = useState(null);
+
   const [isControl, setIsControl] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState({});
@@ -101,10 +100,10 @@ const VideoPlayer = ({ navigation, route }) => {
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [showAd, setShowAd] = useState(false);
   const [isAdshowed, setIsAdshowed] = useState(false);
-  const [proposedAd,setProposedAd] = useState(false)
+  const [isAdScheduled, setIsAdScheduled] = useState(false);
+  const [ifAd, setIfAd] = useState(false);
 
   const [brightness, setBrightness] = useState(0.2);
-
   const setFullscreen = async () => {
     await ScreenOrientation.lockAsync(
       ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT
@@ -156,7 +155,7 @@ const VideoPlayer = ({ navigation, route }) => {
 
     try {
       const savedProgress = await AsyncStorage.getItem(
-        `videoProgress_${videoUri.id}`
+        `videoProgress_${videoArray[currentVideoIndex].id}`
       );
       setSavedProgress(savedProgress);
     } catch (error) {
@@ -164,52 +163,80 @@ const VideoPlayer = ({ navigation, route }) => {
     }
   };
 
-  const progressHandler = async (progress) => {
+  const progressHandler = (progress) => {
     const { currentTime, playableDuration } = progress;
     setProgress(progress);
+    const halfDuration = playableDuration/2
+    // if(halfDuration >60){
+    //   console.log("in add function")
+    //   scheduleNextAd(currentTime,halfDuration)
+    // }
+    !ifAd &&
+      (scheduledNextVideo(currentTime, playableDuration),
+      
+      
+      saveProgress(currentTime));
+    // if(!ifAd && !isAdScheduled){
+    //   if(currentTime >= halfDuration){
+    //       // setIsPaused(true)
+    //       setIfAd(true)
+    //       setIsAdScheduled(true)
+    //       console.log("calling scheduled ad")
 
-
-    if(!showAd){
-      if (playableDuration - currentTime < 10 && !isNextVideoScheduled) {
-        showNextVideo();
-        setIsNextVideoScheduled(true);
-      } else if (playableDuration - currentTime >= 10) {
-        setIsNextVideoScheduled(false);
-        setNextVideo(null);
-      }
-      // if(playableDuration - currentTime <= 60 && !proposedAd){
-      //   setProposedAd(true)
-      //   setVideoUri(adds[0])
-      //   console.log(adds[0])
-      //   console.log("Add will start from here")
-
-      // }
-
-    }
+    //   }
+    // }
+      
     
-    if (!showAd) {
-      try {
-        await AsyncStorage.setItem(
-          `videoProgress_${videoUri.id}`,
-          currentTime.toString()
-        );
-      } catch (error) {
-        console.error("Error saving video progress:", error);
-      }
+  };
+  const saveProgress = async (currentTime) => {
+    try {
+      await AsyncStorage.setItem(
+        `videoProgress_${videoArray[currentVideoIndex].id}`,
+        currentTime.toString()
+      );
+    } catch (error) {
+      console.error("Error saving video progress:", error);
     }
   };
-  const showNextVideo = () => {
-    const currentVideoIndex = videoArray.findIndex((v) => v.id === videoUri.id);
-    const nextVideo = videoArray[currentVideoIndex + 1];
-    // console.log(nextVideo)
-    if (nextVideo !== undefined) {
-      // setVideoUri({uri:nextVideo.url})
-      setNextVideo(nextVideo);
-    } else {
-      // console.log("no more video");
+
+  const scheduledNextVideo = (currentTime, playableDuration) => {
+    if (playableDuration - currentTime < 10 && !isNextVideoScheduled && !repeat) {
+      showNextVideo();
+      setIsNextVideoScheduled(true);
+    } else if (playableDuration - currentTime >= 10) {
+      setIsNextVideoScheduled(false);
       setNextVideo(null);
     }
   };
+  const showNextVideo = () => {
+    const videoIndex = videoArray.findIndex(
+      (v) => v.id === videoArray[currentVideoIndex].id
+    );
+    if (videoIndex === videoArray.length - 1) {
+      console.log("index equal");
+      setNextVideo(null);
+    } else setNextVideo(videoArray[currentVideoIndex + 1]);
+    // const nextVideo = videoArray[currentVideoIndex + 1];
+    // // console.log(nextVideo)
+    // if (nextVideo !== undefined) {
+    //   // setVideoUri({uri:nextVideo.url})
+    //   setNextVideo(nextVideo);
+    // } else {
+    //   // console.log("no more video");
+    //   setNextVideo(null);
+    // }
+  };
+const scheduleNextAd = (currentTime,halfDuration) =>{
+
+  if (currentTime > halfDuration && !isAdScheduled) {
+    console.log("scceduled")
+    setIsNextVideoScheduled(true);
+  } else if (currentTime >= halfDuration) {
+    setIsNextVideoScheduled(false);
+    console.log("not scheduled")
+  }
+
+}
   // const onMuteHandler = async () => {
   //   try {
   //     const mute = await castSession.isMute();
@@ -237,39 +264,33 @@ const VideoPlayer = ({ navigation, route }) => {
   };
 
   const onVideoEnd = () => {
-    // !repeat && nextVideo && setVideoUri(videoArray[currentVideoIndex]);
-    !repeat &&  setVideoUri(videoArray[currentVideoIndex]);
-    // !nextVideo && setVideoUri(videoArray[0]);
-    showAd ? (setIsAdshowed(true), setShowAd(false)) : setIsAdshowed(false);
+    ifAd
+      ? (setIsAdshowed(true), setIfAd(false))
+      : currentVideoIndex < videoArray.length - 1
+      ? (setIfAd(true),
+        setIsAdshowed(false),
+        !repeat? setCurrentVideoIndex(currentVideoIndex + 1):
+        setCurrentVideoIndex(currentVideoIndex + 1))
+      : (setIfAd(true), setCurrentVideoIndex(0));
   };
 
-  const onVideoLoad = () => (
-    castState === "connected" ? setIsPaused(true) : setIsPaused(false),
-    setNextVideo(null),
-    !showAd && videoRef.current.seek(parseFloat(savedProgress)),
-    setIsVideoLoading(false),
-    showAd
-      ? setVideoUri(adds[0])
-      : (setVideoUri(videoArray[currentVideoIndex]),
-        setCurrentVideoIndex(currentVideoIndex + 1))
+  const onVideoLoad = () => {
+    !ifAd && videoRef.current.seek(parseFloat(savedProgress));
+    ifAd ? setNextVideo(null) : null;
+    setIsVideoLoading(false);
+    // castState === "connected" ? setIsPaused(true) : setIsPaused(false),
+  };
 
-    // setShowAd(true)
-  );
   const onVideoLoadStart = () => {
     setIsVideoLoading(true);
-
-    !isAdshowed && setShowAd(true);
+    !isAdshowed && !downLoadedVideo && setIfAd(true);
+    setIsControl(false);
   };
 
   const onCardpressPlayVideo = (video) => {
-    // console.log("video", video);
-    const videoIndex = videoArray.findIndex((v) => v.id === video.id);
-    console.log(videoIndex)
-    !showAd ? setShowAd(true):setIsAdshowed(false)
-    setCurrentVideoIndex(videoIndex)
-    setVideoUri(videoArray[videoIndex])
-    
-  }
+    const videoIndex = videoArray.findIndex((vid) => vid.id === video.id);
+    setCurrentVideoIndex(videoIndex);
+  };
 
   // useEffect(() => {
   //   let autoHide;
@@ -285,21 +306,22 @@ const VideoPlayer = ({ navigation, route }) => {
     if (!defaultBrightness) {
       getDefaultBrightness();
     }
-    if (!showAd) {
+    if (!ifAd) {
       loadProgress();
     }
-    if (videoUri && !nextVideo) {
-      setNextVideo(null);
-    }
-  }, [videoUri, defaultBrightness, showAd]);
+    // if (videoUri && !nextVideo) {
+    //   setNextVideo(null);
+    // }
+  }, [defaultBrightness, ifAd]);
 
   useEffect(() => {
     Brightness.setBrightnessAsync(brightness);
   }, [brightness]);
+
   useEffect(() => {
     if (downLoadedVideo) {
-      console.log(downLoadedVideo);
-      setVideoUri(downLoadedVideo);
+      // console.log(downLoadedVideo);
+      // setVideoUri(downLoadedVideo);
     }
   }, [downLoadedVideo]);
 
@@ -316,8 +338,8 @@ const VideoPlayer = ({ navigation, route }) => {
   }, [castState]);
 
   //
-  // console.log("current vdo idx",currentVideoIndex);
-  // console.log("show ad",showAd);
+  // console.log("ad scheduled", isAdScheduled);
+  // console.log("show ad", ifAd);
   // console.log("showed Ad",isAdshowed);
 
   return (
@@ -336,7 +358,11 @@ const VideoPlayer = ({ navigation, route }) => {
           onPress={controllHandler}
         >
           <Video
-            source={{ uri: videoUri.videoUrl }}
+            source={{
+              uri: ifAd
+                ? adds[0].videoUrl
+                : downLoadedVideo? downLoadedVideo.videoUrl:videoArray[currentVideoIndex].videoUrl,
+            }}
             ref={videoRef}
             paused={isPaused}
             muted={isMuted}
@@ -359,8 +385,8 @@ const VideoPlayer = ({ navigation, route }) => {
               setProgress(updatedProgress);
             }}
             // onReadyForDisplay={() => }
-            audioOnly={false}
-            poster="https://baconmockup.com/300/200/"
+            // audioOnly={false}
+            // poster="https://baconmockup.com/300/200/"
             posterResizeMode="cover"
             fullscreen={landscape}
             onFullscreenPlayerDidPresent={() => setIsfullscreen(true)}
@@ -384,7 +410,7 @@ const VideoPlayer = ({ navigation, route }) => {
               onPress={() => setIsLocked(!isLocked)}
             />
           )}
-          {nextVideo && !showAd && (
+          {nextVideo && true && (
             <View style={{ width: 380, position: "relative" }}>
               <Text
                 style={{
@@ -400,7 +426,7 @@ const VideoPlayer = ({ navigation, route }) => {
               </Text>
               <VideoCard
                 video={nextVideo}
-                setVideoUri={() => onCardpressPlayVideo(nextVideo)}
+                onPress={() => onCardpressPlayVideo(nextVideo)}
               />
             </View>
           )}
@@ -413,7 +439,7 @@ const VideoPlayer = ({ navigation, route }) => {
             <VideoControls
               videoUri={videoUri}
               progress={progress}
-              showAd={showAd}
+              showAd={ifAd}
               isVideoLoading={isVideoLoading}
               onControlClose={controllHandler}
               isPaused={isPaused}
@@ -460,6 +486,7 @@ const VideoPlayer = ({ navigation, route }) => {
             alignItems: "flex-start",
             gap: 20,
             paddingHorizontal: 20,
+            display: ifAd ? "none" : "flex",
           }}
         >
           <VideoDownloadButton {...videoUri} />
@@ -481,13 +508,13 @@ const VideoPlayer = ({ navigation, route }) => {
         </Text>
 
         {videoArray
-          .filter((video) => video.id !== videoUri.id)
+          .filter((video) => video.id !== videoArray[currentVideoIndex].id)
           .map((video, index) => (
             <VideoCard
               video={video}
               key={video.id}
               // setVideoUri={setVideoUri}
-              onPress={()=>onCardpressPlayVideo(video)}
+              onPress={() => onCardpressPlayVideo(video)}
             />
           ))}
       </View>

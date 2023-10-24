@@ -18,7 +18,7 @@ const DownloadedVideoCard = ({ item = "Downloaded Video" }) => {
       const directory = FileSystem.documentDirectory + item;
       const result = await FileSystem.getInfoAsync(directory);
       setVideo((prev) => ({ ...prev, videoUrl: result.uri }));
-      console.log(result);
+      console.log(result)
     } catch (error) {
       console.log(error);
     }

@@ -5,16 +5,16 @@ import * as FileSystem from "expo-file-system";
 import DownloadProgress from "./DownloadProgress";
 
 const VideoDownloadButton = ({ title, videoUrl }) => {
-//   console.log(uri);
+  //   console.log(uri);
   const [progress, setProgress] = useState();
-  const [totalSize,setTotalSize] = useState()
-  const [receivedSize,setReceivedSize] = useState()
-  const [fileUri,setFileUri] = useState('')
-//   console.log(progress)
-//   console.log(fileUri)
+  const [totalSize, setTotalSize] = useState();
+  const [receivedSize, setReceivedSize] = useState();
+  const [fileUri, setFileUri] = useState("");
+  //   console.log(progress)
+  //   console.log(fileUri)
 
   const callback = (downloadProgress) => {
-    console.log(downloadProgress, "dwnld prog")
+    console.log(downloadProgress, "dwnld prog");
     const progress =
       downloadProgress.totalBytesWritten /
       downloadProgress.totalBytesExpectedToWrite;
@@ -24,47 +24,37 @@ const VideoDownloadButton = ({ title, videoUrl }) => {
   };
   const downloadResumable = FileSystem.createDownloadResumable(
     videoUrl,
-    FileSystem.documentDirectory + title +'.mp4',
-    {},
-    callback,
-    
-    
+    FileSystem.documentDirectory + title + ".mp4",
+    { cache: true },
+    callback
   );
   const downloadHandler = async () => {
-    console.log("download")
+    console.log("download");
+      const result= await FileSystem.downloadAsync(videoUrl,FileSystem.documentDirectory + title + ".mp4",callback);
+      // setFileUri(uri);
+      console.log("Finished downloading to ", result.uri);
+   
+  };
+  const printVideoDetail = async () => {
+    console.log("video detail");
+
     try {
-      const { uri } = await downloadResumable.downloadAsync();
-      setFileUri(uri)
-      console.log("Finished downloading to ", uri);
+      const file = await FileSystem.readAsStringAsync(fileUri);
     } catch (error) {
-        console.log(error)
+      console.log(error);
     }
   };
-  const printVideoDetail = async () =>{
-    console.log("video detail")
-
-    try {
-        const file = await FileSystem.readAsStringAsync(fileUri)
-        
-        
-    } catch (error) {
-        console.log(error)
-        
-    }
-
-  }
 
   return (
     <>
-    <View style={{gap:30,width:"50%"}}>
-    <Button
-      title="Download"
-      style={{ width: 150 }}
-      onPress={downloadHandler}
-    />
-    {/* <DownloadProgress progress={progress?.downloadProgress}/> */}
-   
-    </View>
+      <View style={{ gap: 30, width: "50%" }}>
+        <Button
+          title="Download"
+          style={{ width: 150 }}
+          onPress={downloadHandler}
+        />
+        {/* <DownloadProgress progress={progress?.downloadProgress}/> */}
+      </View>
     </>
   );
 };
