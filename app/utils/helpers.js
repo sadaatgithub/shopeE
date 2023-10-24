@@ -19,3 +19,21 @@ export const getRating = (rating,size = 14) =>{
     }
     return ratingStar
 }
+
+export function findProductIdByAttributes(data, color, grams) {
+    // Iterate through the variations in the data
+    for (const variation of data) {
+      // Check if the variation's attributes match the desired values
+      const attributes = variation.attributes;
+      const isColorMatch = attributes.some(attr => attr.name === "Color" && attr.option === color);
+      const isGramsMatch = attributes.some(attr => attr.name === "Grams" && attr.option === grams);
+  
+      // If both attributes match, return the product ID
+      if (isColorMatch && isGramsMatch) {
+        return variation.id;
+      }
+    }
+  
+    // Return null if no matching product is found
+    return null;
+  }
