@@ -37,3 +37,12 @@ export function findProductIdByAttributes(data, color, grams) {
     // Return null if no matching product is found
     return null;
   }
+
+export const msTosec = (seconds)=>{
+    let mins = parseInt(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    let secs = (Math.trunc(seconds) % 60).toString().padStart(2, "0");
+    return `${mins}:${secs}`;
+
+}

@@ -55,11 +55,11 @@ const WishListScreen = ({navigation}) => {
             ))}
             </View>
 
-<View style={{flexDirection:"column",
+{/* <View style={{flexDirection:"column",
 width:200, height:150,borderWidth:1, transform:[{rotate:'90deg'}]}}>
             <Slider
             vertical={true}/>
-            </View>
+            </View> */}
             </ScrollView>
     </View>
   )

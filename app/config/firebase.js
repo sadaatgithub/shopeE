@@ -11,7 +11,8 @@ const firebaseConfig = {
   projectId: Constants.manifest2?.extra?.firebaseProjectId,
   storageBucket: Constants.manifest2?.extra?.firebaseStorageBucket,
   messagingSenderId: Constants.manifest2?.extra?.firebaseMessagingSenderId,
-  appId: Constants.manifest2?.extra?.firebaseAppId,
+  appId: Constants.expoConfig.extra.firebaseAppId,
+  // appId: Constants.manifest2?.extra?.firebaseAppId,
 };
 
 // Initialize Firebase

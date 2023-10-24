@@ -13,7 +13,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 const VideoModals = ({
   isVisible,
   onPress,
-  inFullscreen,
+  isFullscreen,
   setRating,
   speed,
 }) => {
@@ -41,7 +41,7 @@ const VideoModals = ({
         <View
           style={{
             height: 320,
-            width: inFullscreen ? width / 2 : "100%",
+            width: isFullscreen ? width / 2 : "100%",
             backgroundColor: colors.white,
             borderRadius: 12,
             padding: 20,

@@ -2,37 +2,47 @@ import {
   StyleSheet,
   Text,
   View,
-  TouchableOpacity,
   Dimensions,
   BackHandler,
   Modal,
   Pressable,
-  Switch
+  Button,
+  ActivityIndicator,
+  ToastAndroid,
+  useWindowDimensions,
 } from "react-native";
-import React, { useCallback, useEffect } from "react";
-import { useRef } from "react";
-import { useState } from "react";
-import Video, { TextTrackType } from "react-native-video";
-import { Constants } from "expo-constants";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+
+import Video from "react-native-video";
 import VideoCard from "./VideoCard";
 import colors from "../config/colors";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as ScreenOrientation from "expo-screen-orientation";
-import Slider from "@react-native-community/slider";
 import { useFocusEffect } from "@react-navigation/native";
 import VideoModals from "./videoModals/VideoModals";
 import { setStatusBarHidden } from "expo-status-bar";
 import * as Brightness from "expo-brightness";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Subtitle from "./video/Subtitle";
+import CastBtn from "./button/CastBtn";
+import {
+  useCastState,
+  useMediaStatus,
+  useRemoteMediaClient,
+  useDevices,
+  useCastSession,
+} from "react-native-google-cast";
+import VideoControls from "./video/VideoControls";
+import VideoDownloadButton from "./video/VideoDownloadButton";
+import CastControls from "./video/CastControls";
 
 const videoArray = [
-  {
-    id: 1,
-    title: "स्वयं | पुणे	, Talks | २०२२",
-    videoUrl:
-      "https://player.vimeo.com/progressive_redirect/playback/732018129/rendition/360p/file.mp4?loc=external&log_user=0&signature=cac17e733b782ac4f64a797bd0439a8f6eafe67c34b8db90d4990f587c80323e",
-  },
+  // {
+  //   id: 1,
+  //   title: "Video One",
+  //   videoUrl:
+  //     "https://player.vimeo.com/progressive_redirect/playback/732018129/rendition/360p/file.mp4?loc=external&log_user=0&signature=cac17e733b782ac4f64a797bd0439a8f6eafe67c34b8db90d4990f587c80323e",
+  // },
   {
     id: 2,
     title: "सुसंवादक	| डॉ. उदय	निरगुडकर",
@@ -47,50 +57,58 @@ const videoArray = [
   },
 ];
 
-const VideoPlayer = () => {
-  const width = Dimensions.get("window").width;
-  const height = Dimensions.get("window").height;
-  // const [currentVideoIndex,setCurrentVideoIndex] = useState(0)
-  const [videoUri, setVideoUri] = useState(videoArray[0]);
-  const [isControl, setIsControl] = useState(false);
+const adds = [
+  {
+    id: 1,
+    title: "Add One",
+    videoUrl:
+      "https://file-examples.com/storage/fe1207564e65327fe9c8723/2017/04/file_example_MP4_480_1_5MG.mp4",
+    // "https://www.youtube.com/watch?v=M853v2oFQRs",
+  },
+];
+
+const VideoPlayer = ({ navigation, route }) => {
+  const downLoadedVideo = route.params;
+  const videoRef = useRef();
+  const { height, width } = useWindowDimensions();
+  const castState = useCastState();
+
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [videoUri, setVideoUri] = useState(videoArray[currentVideoIndex]);
+  const [prevVideoId, setPrevVideoId] = useState("");
+  const [nextVideoId, setNextVideoId] = useState(null);
+  const [isControl, setIsControl] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState({});
-  const [inFullscreen, setInFullscreen] = useState(false);
+  const [landscape, setLandscape] = useState(false);
+  const [isFullscreen, setIsfullscreen] = useState(false);
   const [isMuted, setIsmuted] = useState(false);
+
   const [rate, setRate] = useState(1);
   const [rateModal, setRateModal] = useState(false);
   const [volumeBar, setVolumeBar] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   const [isLocked, setIsLocked] = useState(false); //   const [inFullscreen,setInFullscreen] = useState(false)
   const [volume, setVolume] = useState(1.0);
-  const [subtitle, setSubtitle] = useState([]);
-  const videoRef = useRef();
   const [permissionResponse, requestPermission] = Brightness.usePermissions();
   const [isCaption, setIsCaption] = useState(false);
-  const [seek, setSeek] = useState();
-  const [isNextVideoScheduled,setIsNextVideoScheduled] = useState(false)
-  const [nextVideo, setNextVideo] = useState({})
-  const [repeat,setRepeat] = useState(false)
-  // const defaultBrightness = Brightness.getBrightnessAsync()
+  const [isNextVideoScheduled, setIsNextVideoScheduled] = useState(false);
+  const [nextVideo, setNextVideo] = useState({});
+  const [repeat, setRepeat] = useState(false);
   const [defaultBrightness, setDefaultbrightness] = useState("");
   const [savedProgress, setSavedProgress] = useState("");
+  const [isCastConnected, setIsCastConnected] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
+  const [showAd, setShowAd] = useState(false);
+  const [isAdshowed, setIsAdshowed] = useState(false);
+  const [proposedAd,setProposedAd] = useState(false)
 
-  const [brightness, setBrightness] = useState("");
-
-  const format = (seconds) => {
-    let mins = parseInt(seconds / 60)
-      .toString()
-      .padStart(2, "0");
-    let secs = (Math.trunc(seconds) % 60).toString().padStart(2, "0");
-    return `${mins}:${secs}`;
-  };
+  const [brightness, setBrightness] = useState(0.2);
 
   const setFullscreen = async () => {
     await ScreenOrientation.lockAsync(
       ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT
     );
-    // videoRef.current.play();
-    setIsPaused(false);
     setStatusBarHidden(true, "fade");
   };
 
@@ -104,8 +122,8 @@ const VideoPlayer = () => {
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
-        if (inFullscreen) {
-          setInFullscreen(false);
+        if (landscape) {
+          setLandscape(false);
           exitFullscreen();
           return true;
         } else return false;
@@ -115,23 +133,27 @@ const VideoPlayer = () => {
         onBackPress
       );
       return () => subscription.remove();
-    }, [inFullscreen, exitFullscreen])
+    }, [landscape, exitFullscreen])
   );
 
-  const requestPermit = async () => {
-    const { granted } = await requestPermission();
-    if (!granted) {
-      alert("You need to enable permission to access the library");
-    }
-  };
+  // const requestPermit = async () => {
+  //   const { granted } = await requestPermission();
+  //   if (!granted) {
+  //     alert("You need to enable permission to access the library");
+  //   }
+  // };
 
   const getDefaultBrightness = async () => {
+    console.log("calling defaultbrightness");
+
     const bri = await Brightness.getBrightnessAsync();
     setBrightness(bri);
     setDefaultbrightness(bri);
   };
 
   const loadProgress = async () => {
+    console.log("calling loadprogress");
+
     try {
       const savedProgress = await AsyncStorage.getItem(
         `videoProgress_${videoUri.id}`
@@ -144,76 +166,174 @@ const VideoPlayer = () => {
 
   const progressHandler = async (progress) => {
     const { currentTime, playableDuration } = progress;
-    // console.log(progress)
-  
-    if(playableDuration - currentTime < 10 && !isNextVideoScheduled){
-      showNextVideo()
-     setIsNextVideoScheduled(true)
-    } else if(playableDuration - currentTime >=10){
-      setIsNextVideoScheduled(false)
-      setNextVideo(null)
-
-
-    }
-    // console.log(playableDuration-currentTime)
     setProgress(progress);
 
-    try {
-      await AsyncStorage.setItem(
-        `videoProgress_${videoUri.id}`,
-        currentTime.toString()
-      );
-    } catch (error) {
-      console.error("Error saving video progress:", error);
+
+    if(!showAd){
+      if (playableDuration - currentTime < 10 && !isNextVideoScheduled) {
+        showNextVideo();
+        setIsNextVideoScheduled(true);
+      } else if (playableDuration - currentTime >= 10) {
+        setIsNextVideoScheduled(false);
+        setNextVideo(null);
+      }
+      // if(playableDuration - currentTime <= 60 && !proposedAd){
+      //   setProposedAd(true)
+      //   setVideoUri(adds[0])
+      //   console.log(adds[0])
+      //   console.log("Add will start from here")
+
+      // }
+
+    }
+    
+    if (!showAd) {
+      try {
+        await AsyncStorage.setItem(
+          `videoProgress_${videoUri.id}`,
+          currentTime.toString()
+        );
+      } catch (error) {
+        console.error("Error saving video progress:", error);
+      }
     }
   };
-  const showNextVideo = () =>{
-    const currentVideoIndex = videoArray.findIndex(v => v.id === videoUri.id)
-    const nextVideo = videoArray[currentVideoIndex+1]
+  const showNextVideo = () => {
+    const currentVideoIndex = videoArray.findIndex((v) => v.id === videoUri.id);
+    const nextVideo = videoArray[currentVideoIndex + 1];
     // console.log(nextVideo)
-    if(nextVideo !== undefined){
+    if (nextVideo !== undefined) {
       // setVideoUri({uri:nextVideo.url})
-      setNextVideo(nextVideo)
-
-      } else{
-        console.log("no more video")
-        setNextVideo(null)
-      }
-  
-
-  }
-  useEffect(() => {
-    inFullscreen ? setFullscreen() : exitFullscreen();
-    getDefaultBrightness();
-    // requestPermit()
-    loadProgress();
-    if(videoUri && !nextVideo){
-      setNextVideo(null)
-
+      setNextVideo(nextVideo);
+    } else {
+      // console.log("no more video");
+      setNextVideo(null);
     }
+  };
+  // const onMuteHandler = async () => {
+  //   try {
+  //     const mute = await castSession.isMute();
+  //     castSession.setMute(!mute);
+  //     setIsCastMute(!mute);
+  //   } catch (error) {}
+  // };
+  const controllHandler = () => {
+    setIsControl(!isControl);
+  };
+  const onCaptionChange = () => {
+    setIsCaption(!isCaption);
+    showToastWithGravity("Subtitles/CC is", isCaption);
+  };
+  const onRepeatModeChange = () => {
+    setRepeat(!repeat);
+    showToastWithGravity("Repeat Mode", repeat);
+  };
+  const showToastWithGravity = (msg, state) => {
+    ToastAndroid.showWithGravity(
+      `${msg} ${state ? "OFF" : "ON"}`,
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM
+    );
+  };
 
-  }, [inFullscreen, videoUri]);
+  const onVideoEnd = () => {
+    // !repeat && nextVideo && setVideoUri(videoArray[currentVideoIndex]);
+    !repeat &&  setVideoUri(videoArray[currentVideoIndex]);
+    // !nextVideo && setVideoUri(videoArray[0]);
+    showAd ? (setIsAdshowed(true), setShowAd(false)) : setIsAdshowed(false);
+  };
+
+  const onVideoLoad = () => (
+    castState === "connected" ? setIsPaused(true) : setIsPaused(false),
+    setNextVideo(null),
+    !showAd && videoRef.current.seek(parseFloat(savedProgress)),
+    setIsVideoLoading(false),
+    showAd
+      ? setVideoUri(adds[0])
+      : (setVideoUri(videoArray[currentVideoIndex]),
+        setCurrentVideoIndex(currentVideoIndex + 1))
+
+    // setShowAd(true)
+  );
+  const onVideoLoadStart = () => {
+    setIsVideoLoading(true);
+
+    !isAdshowed && setShowAd(true);
+  };
+
+  const onCardpressPlayVideo = (video) => {
+    // console.log("video", video);
+    const videoIndex = videoArray.findIndex((v) => v.id === video.id);
+    console.log(videoIndex)
+    !showAd ? setShowAd(true):setIsAdshowed(false)
+    setCurrentVideoIndex(videoIndex)
+    setVideoUri(videoArray[videoIndex])
+    
+  }
+
+  // useEffect(() => {
+  //   let autoHide;
+  //   if (isControl) {
+  //     autoHide = setTimeout(() => {
+  //       setIsControl(false);
+  //     }, 5000);
+  //   }
+  //   return () => clearTimeout(autoHide);
+  // }, [isControl]);
+
+  useEffect(() => {
+    if (!defaultBrightness) {
+      getDefaultBrightness();
+    }
+    if (!showAd) {
+      loadProgress();
+    }
+    if (videoUri && !nextVideo) {
+      setNextVideo(null);
+    }
+  }, [videoUri, defaultBrightness, showAd]);
 
   useEffect(() => {
     Brightness.setBrightnessAsync(brightness);
   }, [brightness]);
+  useEffect(() => {
+    if (downLoadedVideo) {
+      console.log(downLoadedVideo);
+      setVideoUri(downLoadedVideo);
+    }
+  }, [downLoadedVideo]);
+
+  useEffect(() => {
+    if (castState === "connected") {
+      setIsPaused(true);
+      setNextVideo(null);
+      setIsControl(false);
+      setIsCastConnected(true);
+    } else if (castState === "notConnected") {
+      setIsCastConnected(false);
+      // removeCastprogressHandler()
+    }
+  }, [castState]);
+
+  //
+  // console.log("current vdo idx",currentVideoIndex);
+  // console.log("show ad",showAd);
+  // console.log("showed Ad",isAdshowed);
 
   return (
     <View style={styles.screen}>
       <View
         style={{
           width: width,
-          height: inFullscreen ? height : 224,
+          height: isFullscreen ? height : 224,
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         <Pressable
-          style={{
-            width: inFullscreen
-              ? Dimensions.get("window").width
-              : Dimensions.get("window").width,
-            height: inFullscreen ? Dimensions.get("window").height : 224,
-          }}
-          onPress={() => setIsControl(!isControl)}
+          disabled={castState === "connected"}
+          style={{ position: "absolute", width: "100%", height: "100%" }}
+          onPress={controllHandler}
         >
           <Video
             source={{ uri: videoUri.videoUrl }}
@@ -226,18 +346,36 @@ const VideoPlayer = () => {
             volume={volume}
             rate={rate}
             repeat={repeat}
-            onEnd={() => !repeat && nextVideo && setVideoUri(nextVideo)}
-            onBuffer={x => console.log("buffer")}
-            preventsDisplaySleepDuringVideoPlayback={false}
-            onLoad={(x) => (
-              setIsPaused(false),
-              videoRef.current.seek(parseFloat(savedProgress))
-            )}
+            onError={(error) => console.log("video error", error)}
+            onBuffer={(error) => console.log("video buffering", error)}
+            onEnd={onVideoEnd}
+            onLoad={onVideoLoad}
+            onLoadStart={onVideoLoadStart}
+            onSeek={(x) => {
+              const updatedProgress = {
+                ...progress,
+                currentTime: x.currentTime,
+              };
+              setProgress(updatedProgress);
+            }}
+            // onReadyForDisplay={() => }
+            audioOnly={false}
+            poster="https://baconmockup.com/300/200/"
+            posterResizeMode="cover"
+            fullscreen={landscape}
+            onFullscreenPlayerDidPresent={() => setIsfullscreen(true)}
+            onFullscreenPlayerWillDismiss={exitFullscreen}
+            onFullscreenPlayerDidDismiss={() => setIsfullscreen(false)}
+            onFullscreenPlayerWillPresent={setFullscreen}
           />
           {isCaption && <Subtitle currentTime={progress.currentTime} />}
-
+          <View
+            style={{ position: "absolute", right: 210, top: 10, zIndex: 10 }}
+          >
+            <CastBtn videoUri={videoUri} />
+          </View>
           {/* screen lock unclock */}
-          {inFullscreen && (
+          {isFullscreen && (
             <MaterialIcons
               name={`${isLocked ? "lock-outline" : "lock-open"}`}
               color={"white"}
@@ -246,210 +384,91 @@ const VideoPlayer = () => {
               onPress={() => setIsLocked(!isLocked)}
             />
           )}
-          {nextVideo &&<View style={{width:380,position:"relative"}}>
-            <Text style={{color:"white",fontSize:22,position:"absolute",zIndex:1,right:20,top:20}}>Next</Text>
-            <VideoCard 
-              {...nextVideo}
-              onPress={() => setVideoUri(nextVideo)}/>
-              </View>}
-
-          {/* control pannel */}
-          {isControl && !isLocked && (
-            <TouchableOpacity
-              style={{
-                position: "absolute",
-                width: "100%",
-                height: "100%",
-                backgroundColor: "rgba(0,0,0,0.5)",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              onPress={() => setIsControl(!isControl)}
-            >
-
-              {/* setting caption and volume------------- */}
-
-              <View style={{ position: "absolute", right: 10, top: 10, flexDirection:"row",gap:16 }}>
-              <MaterialIcons
-                name="cloud-download"
-                color={"white"}
-                size={30}
+          {nextVideo && !showAd && (
+            <View style={{ width: 380, position: "relative" }}>
+              <Text
                 style={{
-                 
-                  // display: "none",
-                }}
-                onPress={()=> console.log("save")}
-              />
-                <Switch value={repeat} trackColor={{false:colors.dark,true:colors.white}} thumbColor={'gray'} onValueChange={()=> setRepeat(!repeat)}/>
-
-                <TouchableOpacity>
-                  <MaterialIcons
-                    name={`${
-                      isCaption ? "closed-caption" : "closed-caption-disabled"
-                    }`}
-                    color={colors.white}
-                    size={30}
-                    onPress={() => setIsCaption(!isCaption)}
-                  />
-                </TouchableOpacity>
-                
-               <MaterialIcons
-                name={`${isMuted || volume === 0 ? "volume-off" : "volume-up"}`}
-                color={"white"}
-                size={30}
-                style={{}}
-                onPress={() => setIsmuted(!isMuted)}
-              />
-              <MaterialIcons
-                name="settings"
-                color={"white"}
-                size={30}
-                style={{}}
-                onPress={() => setIsVisible(!isVisible)}
-              />
-
-              </View>
-
-
-
-              {/* brightenss slider */}
-
-              <View
-                style={{
+                  color: "white",
+                  fontSize: 22,
                   position: "absolute",
-                  left: -40,
-                  transform: [{ rotate: "-90deg" }],
+                  zIndex: 1,
+                  right: 20,
+                  top: 20,
                 }}
               >
-                <Slider
-                  style={{ width: 150 }}
-                  vertical
-                  minimumTrackTintColor="white"
-                  maximumTrackTintColor="white"
-                  thumbTintColor="white"
-                  minimumValue={0}
-                  maximumValue={1}
-                  // thumbImage={require('../assets/sun.png')}
-
-                  step={0.1}
-                  value={brightness}
-                  onValueChange={(x) => setBrightness(x)}
-                />
-              </View>
-             
-              {/* volume bar-------------------------> */}
-
-             
-              {volumeBar && (
-                <View
-                  style={{
-                    position: "absolute",
-                    // bottom: 100,
-                    right: -40,
-                    // width: "50%",
-                    transform: [{ rotate: "-90deg" }],
-                  }}
-                >
-                  <Slider
-                    style={{ width: 150 }}
-                    vertical
-                    maximumTrackTintColor="gray"
-                    minimumTrackTintColor="#FFF"
-                    minimumValue={0}
-                    maximumValue={1.0}
-                    thumbTintColor="white"
-                    step={0.2}
-                    value={volume}
-                    onValueChange={(volume) => setVolume(volume)}
-                  />
-                </View>
-              )}
-
-              
-
-              {/* play/pause/seek control-------------------------> */}
-
-              <View style={{ flexDirection: "row", gap: 40 }}>
-                <MaterialIcons
-                  name="replay-10"
-                  color={colors.white}
-                  size={inFullscreen ? 40 : 30}
-                  onPress={() => (
-                    // setSeek(10)
-                    videoRef.current.seek(progress.currentTime - 10)
-                  )}
-                />
-                <MaterialIcons
-                  name={`${isPaused ? "play-arrow" : "pause"}`}
-                  color={colors.white}
-                  size={inFullscreen ? 40 : 30}
-                  onPress={() => setIsPaused(!isPaused)}
-                />
-                <MaterialIcons
-                  name="forward-10"
-                  color={colors.white}
-                  size={inFullscreen ? 40 : 30}
-                  onPress={() =>
-                    videoRef.current.seek(progress.currentTime + 10)
-                  }
-                />
-              </View>
-
-              {/* bottom progress bar-------------------------> */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  width: "100%",
-                  bottom: inFullscreen ? -130 : -85,
-                  paddingHorizontal: 20,
-                  gap: 30,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    // width: "100%",
-                    flex: 1,
-                  }}
-                >
-                  <Text style={{ color: colors.white }}>
-                    {format(progress.currentTime)}
-                  </Text>
-                  <Slider
-                    style={{ flex: 1 }}
-                    maximumTrackTintColor="gray"
-                    minimumTrackTintColor="#FFF"
-                    minimumValue={0}
-                    thumbTintColor="white"
-                    value={progress.currentTime}
-                    maximumValue={progress.seekableDuration}
-                    onValueChange={(x) => videoRef.current.seek(x)}
-                  />
-                  <Text style={{ color: colors.white }}>
-                    {format(progress.seekableDuration)}
-                  </Text>
-                </View>
-
-                <MaterialIcons
-                  name={`${inFullscreen ? "fullscreen-exit" : "fullscreen"}`}
-                  color={"white"}
-                  size={35}
-                  // style={{ position: "absolute", top: 5, left: 5 }}
-                  onPress={() => setInFullscreen(!inFullscreen)}
-                />
-              </View>
-
-              {/* <Text style={{ color: "white",alignSelf:"flex-start" }}>{videoUri.title}</Text> */}
-            </TouchableOpacity>
+                Next
+              </Text>
+              <VideoCard
+                video={nextVideo}
+                setVideoUri={() => onCardpressPlayVideo(nextVideo)}
+              />
+            </View>
           )}
+
+          {/* control pannel ------ start */}
+          {isCastConnected && <CastControls isFullscreen={isFullscreen} />}
+
+          {/* video players control------------ */}
+          {isControl && !isLocked && (
+            <VideoControls
+              videoUri={videoUri}
+              progress={progress}
+              showAd={showAd}
+              isVideoLoading={isVideoLoading}
+              onControlClose={controllHandler}
+              isPaused={isPaused}
+              onPlayChange={() => setIsPaused(!isPaused)}
+              isCaption={isCaption}
+              onCaptionChange={onCaptionChange}
+              repeat={repeat}
+              onRepeatChange={onRepeatModeChange}
+              isMuted={isMuted}
+              onMutedChange={() => setIsmuted(!isMuted)}
+              onSettingModalChange={() => setIsVisible(!isVisible)}
+              brightness={brightness}
+              onBrightnessChange={(x) => setBrightness(x)}
+              volume={volume}
+              onVolumeChange={(x) => setVolume(x)}
+              onBackSeek={() =>
+                videoRef.current.seek(progress.currentTime - 10)
+              }
+              onForwardSeek={() =>
+                videoRef.current.seek(progress.currentTime + 10)
+              }
+              isFullscreen={isFullscreen}
+              onFullScreenChange={() => setLandscape(!landscape)}
+              onSeek={(x) => videoRef.current.seek(x)}
+            />
+          )}
+          {/* control pannel--------------- end */}
         </Pressable>
+        {isVideoLoading && (
+          <ActivityIndicator
+            animating={isVideoLoading}
+            style={{ position: "absolute" }}
+            size={35}
+            color="white"
+          />
+        )}
       </View>
 
       <View style={{ marginTop: 20 }}>
-        {/* <Button title="fullscreen" onPress={()=> videoRef.current.presentFullscreenPlayer()}/> */}
+        <View
+          style={{
+            width: "100%",
+            flexDirection: "row",
+            alignItems: "flex-start",
+            gap: 20,
+            paddingHorizontal: 20,
+          }}
+        >
+          <VideoDownloadButton {...videoUri} />
+          <Button
+            title="My Downloads"
+            onPress={() => navigation.navigate("My_Downloads")}
+          />
+          {/* <Button title="Stop Casting" onPress={()=> client.stop()}/> */}
+        </View>
         <Text
           style={{
             paddingHorizontal: 10,
@@ -460,13 +479,15 @@ const VideoPlayer = () => {
         >
           Episode ({videoArray.length})
         </Text>
+
         {videoArray
           .filter((video) => video.id !== videoUri.id)
-          .map((video,index) => (
+          .map((video, index) => (
             <VideoCard
-              {...video}
+              video={video}
               key={video.id}
-              onPress={() => setVideoUri(video)}
+              // setVideoUri={setVideoUri}
+              onPress={()=>onCardpressPlayVideo(video)}
             />
           ))}
       </View>
@@ -493,7 +514,7 @@ const VideoPlayer = () => {
           <View
             style={{
               // flex: 1,
-              width: inFullscreen ? width / 2 : "100%",
+              width: isFullscreen ? width / 2 : "100%",
               height: 320,
 
               backgroundColor: colors.white,
@@ -541,7 +562,7 @@ const VideoPlayer = () => {
       </Modal>
       <VideoModals
         isVisible={rateModal}
-        inFullscreen={inFullscreen}
+        isFullscreen={isFullscreen}
         setRating={setRate}
         speed={rate}
         onPress={() => setRateModal(false)}
